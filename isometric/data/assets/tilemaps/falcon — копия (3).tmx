@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" tiledversion="1.1.1" orientation="isometric" renderorder="left-down" width="11" height="11" tilewidth="64" tileheight="32" infinite="0" nextobjectid="1">
+ <tileset firstgid="1" name="tileset tiled" tilewidth="64" tileheight="64" tilecount="24" columns="6">
+  <properties>
+   <property name="v" type="bool" value="true"/>
+  </properties>
+  <image source="tileset_tiled.png" width="439" height="256"/>
+  <tile id="14">
+   <properties>
+    <property name="type" value="water"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="25" source="1616.tsx"/>
+ <layer name="background" width="11" height="11">
+  <data encoding="csv">
+19,7,13,2,21,21,9,14,9,1,9,
+19,7,13,13,21,21,2,9,9,9,9,
+7,3,3,3,21,21,9,9,9,2,2,
+3,3,3,3,21,21,14,9,9,9,9,
+3,3,3,15,21,21,15,15,15,15,2,
+15,15,15,15,21,21,15,15,15,15,15,
+15,15,15,15,21,21,15,15,15,15,15,
+15,15,15,15,21,21,15,15,15,15,15,
+24,24,24,19,19,19,19,19,23,23,23,
+19,19,19,19,19,19,19,19,19,19,19,
+19,19,19,19,19,19,19,19,19,19,19
+</data>
+ </layer>
+</map>
