@@ -20,6 +20,7 @@ var test = 0;
 var slickUI;
 
 var buildMode = false; // is player ib build mode now
+var selectedTile = {};
 
 // json
 
@@ -27,8 +28,8 @@ var playerMoney = 10000;
 
 var buildings = {
     'house': {
-        'width': 2,
-        'height': 3,
+        'width': 3,
+        'height': 4,
         'name': 'house',
         'cost': 5200
     },
@@ -60,6 +61,7 @@ BasicGame.Boot.prototype =
             this.load.tilemap('falcon', 'data/assets/tilemaps/falcon.json', null, Phaser.Tilemap.TILED_JSON);
             // this.load.image("tileset tiled", 'data/assets/tilemaps/tileset_tiled.png');
             game.load.spritesheet("tileset tiled", "data/assets/tilemaps/tileset_tiled.png", 64, 64, 24);
+            game.load.spritesheet("houses", "data/assets/tilemaps/houses.png", 320, 320, 1);
 
             game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
             game.iso.anchor.setTo(0.5, 0.2);
@@ -158,20 +160,23 @@ BasicGame.Boot.prototype =
         loadMap: function () {
 
             this.groundGroup = this.game.add.group();
-            // this.buildingsGroup = this.game.add.group();
+            this.buildingsGroup = this.game.add.group();
 
             this.map = this.game.add.tilemap('falcon');
             this.map.addTilesetImage("tileset tiled", "tileset tiled");
             console.log('::', this.map);
 
             var backgroundLayer = this.map.layers[0].data;
-            var tiles = getTilesFromTilemap(backgroundLayer);
+            var buildingsLayer = this.map.layers[1].data;
+
+            var backgroundTiles = getTilesFromTilemap(backgroundLayer);
+            // var buildingsTiles = getTilesFromTilemap(buildingsLayer);
 
             var backgroundWidth = backgroundLayer.length;
             var backgroundHeight = backgroundLayer[0].length;
 
 
-            game.world.setBounds(440, 70, 2048, 1024);
+            game.world.setBounds(440, 70, 2048, 2048);
 
             // var tileProperties = this.map.tilesets[0].tileProperties;
             // console.log(':7:', this.map.tilesets[0].tileProperties);
@@ -182,7 +187,7 @@ BasicGame.Boot.prototype =
 
                     var x = (ix + 1) * size;
                     var y = (iy + 1) * size;
-                    var currentTile = tiles[iy][ix];
+                    var currentTile = backgroundTiles[iy][ix];
 
                     if (typeof(currentTile) === 'undefined') {
                         continue;
@@ -229,6 +234,49 @@ BasicGame.Boot.prototype =
                     i++;
                 }
             }
+
+
+
+            i = 0;
+            for (iy = 0; iy <= backgroundWidth - 1; iy++) {
+                for (ix = 0; ix <= backgroundHeight - 1; ix++) {
+
+
+                    currentTile = buildingsLayer[iy][ix];
+
+                    if (typeof(currentTile) === 'undefined' || currentTile.index === -1) {
+                        continue;
+                    }
+
+                    x = (ix + 1 + 2) * size;
+                    y = (iy + 1 - 2) * size;
+
+                    tileTop = 7;
+
+                    tile = game.add.isoSprite(
+                        x,
+                        y,
+                        tileTop,
+                        'houses',
+                        currentTile - 1,
+                        this.buildingsGroup
+                    );
+
+                    tile.tileX = ix;
+                    tile.tileY = iy;
+
+                    tile.anchor.set(0.5, 1);
+                    tile.smoothed = false;
+                    tile.initialZ = tileTop;
+
+                    i++;
+                }
+            }
+
+
+
+
+
             this.game.iso.simpleSort(this.groundGroup);
         },
         loadCursors: function () {
@@ -265,6 +313,38 @@ BasicGame.Boot.prototype =
                     this.cancelBuildMode();
                 }
             }
+
+            if (game.input.activePointer.leftButton.isDown)
+            {
+                if (buildMode) {
+                    this.paintBuilding();
+                }
+            }
+
+
+        },
+
+        paintBuilding: function () {
+
+            // var selectedTile = this.selectedTile;
+
+            // console.log('::', selectedTile);
+
+            var x = (selectedTile.x + 1 + 2 - 14) * size;
+            var y = (selectedTile.y + 1 - 2 - 3.5) * size;
+
+            console.log(':xy:',x,y, selectedTile.tileX, selectedTile.tileY);
+
+            tile = game.add.isoSprite(
+                x,
+                y,
+                7,
+                'houses',
+                0 - 1,
+                this.buildingsGroup
+            );
+
+            this.cancelBuildMode();
         },
 
         cancelBuildMode: function () {
@@ -363,6 +443,10 @@ BasicGame.Boot.prototype =
                     // console.log('::',size, yOffset);asd
                     if (tile.isoBounds.containsXY(cursorCenterX + xOffset, cursorCenterY + yOffset)) {
                         inBounds = true;
+
+                        if (ix === 0 && iy === 0) {
+                            selectedTile = {'x': tile.tileX, 'y': tile.tileY}
+                        }
                     }
                 }
             }
