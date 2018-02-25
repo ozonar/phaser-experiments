@@ -32,17 +32,35 @@ BasicGame.Boot.prototype =
             game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
             game.iso.anchor.setTo(0.5, 0.2);
         },
+
         create: function () {
             debugOnCreate(true);
+
+            this.loadMap();
+            this.loadCursors();
+
+        },
+        update: function () {
+
+            this.updateWater();
+            this.updateMoverment();
+            this.game.iso.unproject(this.game.input.activePointer.position, this.cursorPos);
+            this.selectTiles(2, 3);
+
+
+        },
+        render: function () {
+            debugRender(isDebug);
+            // game.debug.cameraInfo(game.camera, 32, 32);
+        },
+
+        loadMap: function () {
+
             this.groundGroup = this.game.add.group();
-            this.cursorPos = new Phaser.Plugin.Isometric.Point3();
 
             this.map = this.game.add.tilemap('falcon');
             this.map.addTilesetImage("tileset tiled", "tileset tiled");
             console.log('::', this.map);
-
-            // var tileProperties = this.map.tilesets[0].tileProperties;
-            // console.log(':7:', this.map.tilesets[0].tileProperties);
 
             var backgroundLayer = this.map.layers[0].data;
             var tiles = getTilesFromTilemap(backgroundLayer);
@@ -53,22 +71,8 @@ BasicGame.Boot.prototype =
 
             game.world.setBounds(440, 70, 2048, 1024);
 
-            console.log(':tiles:', tiles);
-
-            // cursors = game.input.keyboard.createCursorKeys();
-
-            cursors =  {
-                up:  game.input.keyboard.addKey(Phaser.Keyboard.UP),
-                down:  game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
-                left:  game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
-                right:  game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
-
-                w:  game.input.keyboard.addKey(Phaser.Keyboard.W),
-                s:  game.input.keyboard.addKey(Phaser.Keyboard.S),
-                a:  game.input.keyboard.addKey(Phaser.Keyboard.A),
-                d:  game.input.keyboard.addKey(Phaser.Keyboard.D)
-            };
-
+            // var tileProperties = this.map.tilesets[0].tileProperties;
+            // console.log(':7:', this.map.tilesets[0].tileProperties);
 
             var i = 0, tile;
             for (var iy = 0; iy <= backgroundWidth - 1; iy++) {
@@ -125,18 +129,19 @@ BasicGame.Boot.prototype =
             }
             this.game.iso.simpleSort(this.groundGroup);
         },
-        update: function () {
+        loadCursors: function () {
+            this.cursorPos = new Phaser.Plugin.Isometric.Point3();
+            cursors = {
+                up: game.input.keyboard.addKey(Phaser.Keyboard.UP),
+                down: game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
+                left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
+                right: game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
 
-            this.updateWater();
-            this.updateMoverment();
-            this.game.iso.unproject(this.game.input.activePointer.position, this.cursorPos);
-            this.selectTiles(2, 3);
-
-
-        },
-        render: function () {
-            debugRender(isDebug);
-            // game.debug.cameraInfo(game.camera, 32, 32);
+                w: game.input.keyboard.addKey(Phaser.Keyboard.W),
+                s: game.input.keyboard.addKey(Phaser.Keyboard.S),
+                a: game.input.keyboard.addKey(Phaser.Keyboard.A),
+                d: game.input.keyboard.addKey(Phaser.Keyboard.D)
+            };
         },
         updateWater: function () {
             water.forEach(function (w) {
@@ -145,6 +150,19 @@ BasicGame.Boot.prototype =
             });
         },
         updateMoverment: function () {
+
+            // this.mouseMoverment();
+            this.keyboardMoverment();
+
+        },
+
+        mouseMoverment: function () {
+            if (game.input.activePointer.middleButton.isDown) {
+
+            }
+        },
+
+        keyboardMoverment: function () {
             if (cursors.up.isDown || cursors.w.isDown) {
                 game.camera.y -= 4;
                 // test++;
@@ -162,6 +180,7 @@ BasicGame.Boot.prototype =
             else if (cursors.right.isDown || cursors.d.isDown) {
                 game.camera.x += 4;
             }
+
         },
 
         selectTiles: function (height, width) {
@@ -205,12 +224,13 @@ BasicGame.Boot.prototype =
             });
 
             return canPlaceable;
-        },
+        }
+        ,
         selectedArea: function (width, height, tile) {
 
             var sizeAndHalfSize = size + size / 2;
-            var cursorOffsetX = (width * size) /5;
-            var cursorOffsetY = (height * size) /5;
+            var cursorOffsetX = (width * size) / 5;
+            var cursorOffsetY = (height * size) / 5;
             var cursorCenterX = this.cursorPos.x + sizeAndHalfSize - cursorOffsetX;
             var cursorCenterY = this.cursorPos.y + sizeAndHalfSize - cursorOffsetY;
 
@@ -230,7 +250,8 @@ BasicGame.Boot.prototype =
 
             return inBounds;
         }
-    };
+    }
+;
 
 function getTilesFromTilemap(backgroundLayer) {
     var tilesBefore = [];
