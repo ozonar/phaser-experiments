@@ -1,6 +1,3 @@
-/// <reference path="phaser.js" />
-
-// using canvas here just because it runs faster for the body debug stuff
 var game = new Phaser.Game(1280, 640, Phaser.webGL, 'test', null, true, false);
 
 var BasicGame = function (game) {
@@ -14,7 +11,6 @@ var isoGroup, water = [];
 var isDebug = false;
 var cursors;
 var size = 32;
-
 var test = 0;
 
 BasicGame.Boot.prototype =
@@ -59,14 +55,20 @@ BasicGame.Boot.prototype =
 
             console.log(':tiles:', tiles);
 
-            cursors = game.input.keyboard.createCursorKeys();
-            this.game.input.keyboard.addKeyCapture([
-                Phaser.Keyboard.LEFT,
-                Phaser.Keyboard.RIGHT,
-                Phaser.Keyboard.UP,
-                Phaser.Keyboard.DOWN,
-                Phaser.Keyboard.SPACEBAR
-            ]);
+            // cursors = game.input.keyboard.createCursorKeys();
+
+            cursors =  {
+                up:  game.input.keyboard.addKey(Phaser.Keyboard.UP),
+                down:  game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
+                left:  game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
+                right:  game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
+
+                w:  game.input.keyboard.addKey(Phaser.Keyboard.W),
+                s:  game.input.keyboard.addKey(Phaser.Keyboard.S),
+                a:  game.input.keyboard.addKey(Phaser.Keyboard.A),
+                d:  game.input.keyboard.addKey(Phaser.Keyboard.D)
+            };
+
 
             var i = 0, tile;
             for (var iy = 0; iy <= backgroundWidth - 1; iy++) {
@@ -128,7 +130,7 @@ BasicGame.Boot.prototype =
             this.updateWater();
             this.updateMoverment();
             this.game.iso.unproject(this.game.input.activePointer.position, this.cursorPos);
-            this.selectTiles();
+            this.selectTiles(2, 3);
 
 
         },
@@ -143,49 +145,41 @@ BasicGame.Boot.prototype =
             });
         },
         updateMoverment: function () {
-            if (cursors.up.isDown) {
+            if (cursors.up.isDown || cursors.w.isDown) {
                 game.camera.y -= 4;
                 // test++;
                 // console.log('::',test);
             }
-            else if (cursors.down.isDown) {
+            else if (cursors.down.isDown || cursors.s.isDown) {
                 game.camera.y += 4;
                 // test--;
                 // console.log('::',test);
             }
 
-            if (cursors.left.isDown) {
+            if (cursors.left.isDown || cursors.a.isDown) {
                 game.camera.x -= 4;
             }
-            else if (cursors.right.isDown) {
+            else if (cursors.right.isDown || cursors.d.isDown) {
                 game.camera.x += 4;
             }
         },
 
-        selectTiles: function () {
+        selectTiles: function (height, width) {
             var self = this;
+            var canPlaceable = true;
             // Loop through all tiles
             this.groundGroup.forEach(function (tile) {
                 // var x = tile.isoX / this.size;
                 // var y = tile.isoY / this.size;
 
-                var inBounds = self.selectedArea(3, 4, tile);
-
-                // var sizeAndHalfSize = this.size + this.size / 2;
-                // var cursorCenterX = self.cursorPos.x + sizeAndHalfSize;
-                // var cursorCenterY = self.cursorPos.y + sizeAndHalfSize;
-                //
-                // var inBounds = tile.isoBounds.containsXY(cursorCenterX, cursorCenterY);
-                //
-                // if (!inBounds) {
-                //     inBounds = tile.isoBounds.containsXY(cursorCenterX + this.size, cursorCenterY);
-                // }
-
+                var inBounds = self.selectedArea(height, width, tile);
 
                 var waterIncludes = false;
                 this.water.forEach(function (value) {
                     if (value.z === tile.z) {
                         waterIncludes = true;
+                        canPlaceable = false;
+
                     }
                 });
 
@@ -208,20 +202,15 @@ BasicGame.Boot.prototype =
                     self.game.add.tween(tile).to({isoZ: tile.initialZ + 0}, 200, Phaser.Easing.Quadratic.InOut, true);
                 }
 
-                // if (!self.finding && self.game.input.activePointer.isDown && inBounds) {
-                //     // Start path finding
-                //     self.finding = true;
-                //     var dp = self.dudePosition();
-                //     self.easystar.findPath(dp.x, dp.y, x, y, self.processPath.bind(self));
-                //     self.easystar.calculate();
-                // }
             });
+
+            return canPlaceable;
         },
         selectedArea: function (width, height, tile) {
 
             var sizeAndHalfSize = size + size / 2;
-            var cursorOffsetX = ((width) * size) /5;
-            var cursorOffsetY = ((height) * size) /5;
+            var cursorOffsetX = (width * size) /5;
+            var cursorOffsetY = (height * size) /5;
             var cursorCenterX = this.cursorPos.x + sizeAndHalfSize - cursorOffsetX;
             var cursorCenterY = this.cursorPos.y + sizeAndHalfSize - cursorOffsetY;
 
