@@ -1,4 +1,7 @@
-var game = new Phaser.Game(1280, 640, Phaser.webGL, 'test', null, true, false);
+var windowWidth = 1280;
+var windowHeight = 640;
+
+var game = new Phaser.Game(windowWidth, windowHeight, Phaser.webGL, 'test', null, true, false);
 
 var BasicGame = function (game) {
 };
@@ -8,10 +11,36 @@ BasicGame.Boot = function (game) {
 };
 
 var isoGroup, water = [];
+var buildingGroup = [];
 var isDebug = false;
 var cursors;
 var size = 32;
 var test = 0;
+
+var slickUI;
+
+var buildMode = false; // is player ib build mode now
+
+// json
+
+var playerMoney = 10000;
+
+var buildings = {
+    'house': {
+        'width': 2,
+        'height': 3,
+        'name': 'house',
+        'cost': 5200
+    },
+    'bakery': {
+        'width': 1,
+        'height': 1,
+        'name': 'bakery',
+        'cost': 3000
+    }
+};
+
+var menus = {};
 
 BasicGame.Boot.prototype =
     {
@@ -23,8 +52,11 @@ BasicGame.Boot.prototype =
 
             game.plugins.add(new Phaser.Plugin.Isometric(game));
 
-            // game.load.atlasJSONHash('tileset', 'data/assets/tileset.png', 'data/assets/tileset.json');
+            slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
+            game.load.image('menu-button', 'data/assets/ui/menu.png');
+            slickUI.load('data/assets/ui/kenney/kenney.json');
 
+            // game.load.atlasJSONHash('tileset', 'data/assets/tileset.png', 'data/assets/tileset.json');
             this.load.tilemap('falcon', 'data/assets/tilemaps/falcon.json', null, Phaser.Tilemap.TILED_JSON);
             // this.load.image("tileset tiled", 'data/assets/tilemaps/tileset_tiled.png');
             game.load.spritesheet("tileset tiled", "data/assets/tilemaps/tileset_tiled.png", 64, 64, 24);
@@ -38,6 +70,7 @@ BasicGame.Boot.prototype =
 
             this.loadMap();
             this.loadCursors();
+            this.loadMenu();
 
         },
         update: function () {
@@ -45,7 +78,11 @@ BasicGame.Boot.prototype =
             this.updateWater();
             this.updateMoverment();
             this.game.iso.unproject(this.game.input.activePointer.position, this.cursorPos);
-            this.selectTiles(2, 3);
+
+
+            if (buildMode !== false) {
+                this.selectTiles(buildMode.x, buildMode.y);
+            }
 
 
         },
@@ -54,9 +91,74 @@ BasicGame.Boot.prototype =
             // game.debug.cameraInfo(game.camera, 32, 32);
         },
 
+        loadMenu: function () {
+            var button, panel, menuButton;
+            /** @namespace SlickUI.Element */
+
+            // Paint panel and text
+            slickUI.add(panel = new SlickUI.Element.Panel(game.width - 256, 8, 250, game.height - 16));
+            panel.add(new SlickUI.Element.Text(10,0, "Build")).centerHorizontally().text.alpha = 0.5;
+
+            // Build list
+            var startY = 40;
+            for (var building in buildings) {
+                (function() {
+                   var buildingValues = buildings[building];
+
+                   panel.add(button = new SlickUI.Element.Button(0, startY, 240, 40)).events.onInputUp.add(function () {
+                       buildMode = {'x': buildingValues.width, 'y': buildingValues.height};
+                       panel.visible = false;
+                       menuButton.visible = true;
+                   });
+                   button.add(new SlickUI.Element.Text(0,0, "Build " + buildingValues.name + '| ' + buildingValues.cost + '$')).center();
+
+                   startY += 50;
+               })();
+            }
+
+            // Paint close button
+            panel.add(button = new SlickUI.Element.Button(0,game.height - 76, 240, 40)).events.onInputUp.add(function () {
+                buildMode = false;
+                panel.visible = false;
+                menuButton.visible = true;
+            });
+            button.add(new SlickUI.Element.Text(0,0, "Close")).center();
+
+            panel.visible = false;
+            var basePosition = panel.x;
+
+            slickUI.add(menuButton = new SlickUI.Element.DisplayObject(game.width - 45, 8, game.make.sprite(0, 0, 'menu-button')));
+            menuButton.inputEnabled = true;
+            menuButton.input.useHandCursor = true;
+            menuButton.events.onInputDown.add(function () {
+                if(panel.visible) {
+                    return;
+                }
+                panel.visible = true;
+                panel.x = basePosition + 156;
+                game.add.tween(panel).to( {x: basePosition}, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
+                    menuButton.visible = false;
+                });
+                slickUI.container.displayGroup.bringToTop(panel.container.displayGroup);
+            }, this);
+
+            button.events.onInputUp.add(function () {
+                game.add.tween(panel).to( {x: basePosition + 156}, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
+                    panel.visible = false;
+                    panel.x -= 156;
+                });
+                menuButton.visible = true;
+            });
+
+
+            menus.menuButton = menuButton;
+
+        },
+
         loadMap: function () {
 
             this.groundGroup = this.game.add.group();
+            // this.buildingsGroup = this.game.add.group();
 
             this.map = this.game.add.tilemap('falcon');
             this.map.addTilesetImage("tileset tiled", "tileset tiled");
@@ -151,15 +253,23 @@ BasicGame.Boot.prototype =
         },
         updateMoverment: function () {
 
-            // this.mouseMoverment();
+            this.mouseMoverment();
             this.keyboardMoverment();
 
         },
 
         mouseMoverment: function () {
-            if (game.input.activePointer.middleButton.isDown) {
-
+            if (game.input.activePointer.rightButton.isDown)
+            {
+                if (buildMode) {
+                    this.cancelBuildMode();
+                }
             }
+        },
+
+        cancelBuildMode: function () {
+            buildMode = false;
+            this.deselectTiles();
         },
 
         keyboardMoverment: function () {
@@ -188,8 +298,6 @@ BasicGame.Boot.prototype =
             var canPlaceable = true;
             // Loop through all tiles
             this.groundGroup.forEach(function (tile) {
-                // var x = tile.isoX / this.size;
-                // var y = tile.isoY / this.size;
 
                 var inBounds = self.selectedArea(height, width, tile);
 
@@ -198,7 +306,6 @@ BasicGame.Boot.prototype =
                     if (value.z === tile.z) {
                         waterIncludes = true;
                         canPlaceable = false;
-
                     }
                 });
 
@@ -224,8 +331,20 @@ BasicGame.Boot.prototype =
             });
 
             return canPlaceable;
-        }
-        ,
+        },
+        
+        deselectTiles: function () {
+            var self = this;
+            this.groundGroup.forEach(function (tile) {
+                if (tile.selected) {
+                    tile.selected = false;
+                        tile.tint = 0xffffff;
+                    self.game.add.tween(tile).to({isoZ: tile.initialZ + 0}, 200, Phaser.Easing.Quadratic.InOut, true);
+                }
+
+            });
+        },
+        
         selectedArea: function (width, height, tile) {
 
             var sizeAndHalfSize = size + size / 2;
@@ -250,8 +369,7 @@ BasicGame.Boot.prototype =
 
             return inBounds;
         }
-    }
-;
+    };
 
 function getTilesFromTilemap(backgroundLayer) {
     var tilesBefore = [];
