@@ -11,7 +11,7 @@ BasicGame.Boot = function (game) {
 };
 
 var isoGroup, water = [];
-var buildingGroup = [];
+// var buildingGroup = [];
 var isDebug = false;
 var cursors;
 var size = 32;
@@ -19,12 +19,19 @@ var test = 0;
 
 var slickUI;
 
-var buildMode = false; // is player ib build mode now
+var buildMode = false; // is player in build mode now
+var buildingData = {};
 var selectedTile = {};
+var canPlaceable = true;
 
 // json
 
 var playerMoney = 10000;
+var moneyCurrency = '$';
+
+var playerGUI = {
+    'money': null
+};
 
 var buildings = {
     'house': {
@@ -72,7 +79,8 @@ BasicGame.Boot.prototype =
 
             this.loadMap();
             this.loadCursors();
-            this.loadMenu();
+            loadMenu();
+            // buildMenu();
 
         },
         update: function () {
@@ -86,75 +94,18 @@ BasicGame.Boot.prototype =
                 this.selectTiles(buildMode.x, buildMode.y);
             }
 
-
         },
         render: function () {
             debugRender(isDebug);
             // game.debug.cameraInfo(game.camera, 32, 32);
         },
 
-        loadMenu: function () {
-            var button, panel, menuButton;
-            /** @namespace SlickUI.Element */
-
-            // Paint panel and text
-            slickUI.add(panel = new SlickUI.Element.Panel(game.width - 256, 8, 250, game.height - 16));
-            panel.add(new SlickUI.Element.Text(10,0, "Build")).centerHorizontally().text.alpha = 0.5;
-
-            // Build list
-            var startY = 40;
-            for (var building in buildings) {
-                (function() {
-                   var buildingValues = buildings[building];
-
-                   panel.add(button = new SlickUI.Element.Button(0, startY, 240, 40)).events.onInputUp.add(function () {
-                       buildMode = {'x': buildingValues.width, 'y': buildingValues.height};
-                       panel.visible = false;
-                       menuButton.visible = true;
-                   });
-                   button.add(new SlickUI.Element.Text(0,0, "Build " + buildingValues.name + '| ' + buildingValues.cost + '$')).center();
-
-                   startY += 50;
-               })();
-            }
-
-            // Paint close button
-            panel.add(button = new SlickUI.Element.Button(0,game.height - 76, 240, 40)).events.onInputUp.add(function () {
-                buildMode = false;
-                panel.visible = false;
-                menuButton.visible = true;
-            });
-            button.add(new SlickUI.Element.Text(0,0, "Close")).center();
-
-            panel.visible = false;
-            var basePosition = panel.x;
-
-            slickUI.add(menuButton = new SlickUI.Element.DisplayObject(game.width - 45, 8, game.make.sprite(0, 0, 'menu-button')));
-            menuButton.inputEnabled = true;
-            menuButton.input.useHandCursor = true;
-            menuButton.events.onInputDown.add(function () {
-                if(panel.visible) {
-                    return;
-                }
-                panel.visible = true;
-                panel.x = basePosition + 156;
-                game.add.tween(panel).to( {x: basePosition}, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
-                    menuButton.visible = false;
-                });
-                slickUI.container.displayGroup.bringToTop(panel.container.displayGroup);
-            }, this);
-
-            button.events.onInputUp.add(function () {
-                game.add.tween(panel).to( {x: basePosition + 156}, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
-                    panel.visible = false;
-                    panel.x -= 156;
-                });
-                menuButton.visible = true;
-            });
 
 
-            menus.menuButton = menuButton;
-
+        updatePlayerGUIData: function () {
+            // playerGUI.money.remove();
+            playerGUI.moneyText.value = playerMoney + moneyCurrency;
+            // playerGUI.money.add(new SlickUI.Element.Text(0,0, playerMoney + moneyCurrency)).center();
         },
 
         loadMap: function () {
@@ -318,6 +269,18 @@ BasicGame.Boot.prototype =
             {
                 if (buildMode) {
                     this.paintBuilding();
+                } else {
+
+                    var sizeAndHalfSize = 2*size;
+                    // var sizeAndHalfSize = 5.5*size;
+                    var cursorCenterX = this.cursorPos.x + sizeAndHalfSize;
+                    var cursorCenterY = this.cursorPos.y + sizeAndHalfSize;
+
+                    this.buildingsGroup.forEach(function (building) {
+                        if (building.isoBounds.containsXY(cursorCenterX, cursorCenterY)) {
+                            console.log(':house:');
+                        }
+                    });
                 }
             }
 
@@ -326,16 +289,22 @@ BasicGame.Boot.prototype =
 
         paintBuilding: function () {
 
-            // var selectedTile = this.selectedTile;
+            if (playerMoney < buildingData.cost) {
+                return false;
+            }
 
-            // console.log('::', selectedTile);
+            if (!canPlaceable) {
+                return false;
+            }
+
+            playerMoney -= buildingData.cost;
+            this.updatePlayerGUIData();
 
             var x = (selectedTile.x + 1 + 2 - 14) * size;
             var y = (selectedTile.y + 1 - 2 - 3.5) * size;
 
-            console.log(':xy:',x,y, selectedTile.tileX, selectedTile.tileY);
 
-            tile = game.add.isoSprite(
+            game.add.isoSprite(
                 x,
                 y,
                 7,
@@ -375,7 +344,7 @@ BasicGame.Boot.prototype =
 
         selectTiles: function (height, width) {
             var self = this;
-            var canPlaceable = true;
+            canPlaceable = true;
             // Loop through all tiles
             this.groundGroup.forEach(function (tile) {
 
@@ -385,7 +354,9 @@ BasicGame.Boot.prototype =
                 this.water.forEach(function (value) {
                     if (value.z === tile.z) {
                         waterIncludes = true;
-                        canPlaceable = false;
+                        if (inBounds) {
+                            canPlaceable = false;
+                        }
                     }
                 });
 
