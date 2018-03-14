@@ -26,26 +26,45 @@ var canPlaceable = true;
 
 // json
 
-var playerMoney = 10000;
+var playerMoney = 100000;
 var moneyCurrency = '$';
 
 var playerGUI = {
     'money': null
 };
 
+
+var bunny;
+
 var buildings = {
-    'house': {
+    'factory': {
         'width': 3,
         'height': 4,
-        'name': 'house',
-        'cost': 5200
+        'name': 'factory',
+        'cost': 5200,
+        'type': 1
     },
-    'bakery': {
-        'width': 1,
-        'height': 1,
-        'name': 'bakery',
-        'cost': 3000
-    }
+    'test': {
+        'width': 3,
+        'height': 5,
+        'name': 'test',
+        'cost': 1,
+        'type': 2
+    },
+    'house': {
+        'width': 5,
+        'height': 3,
+        'name': 'house',
+        'cost': 3000,
+        'type': 3
+    },
+    'tavern': {
+        'width': 4,
+        'height': 6,
+        'name': 'tavern',
+        'cost': 12000,
+        'type': 4
+    },
 };
 
 var menus = {};
@@ -66,16 +85,16 @@ BasicGame.Boot.prototype =
 
             // game.load.atlasJSONHash('tileset', 'data/assets/tileset.png', 'data/assets/tileset.json');
             this.load.tilemap('falcon', 'data/assets/tilemaps/falcon.json', null, Phaser.Tilemap.TILED_JSON);
-            // this.load.image("tileset tiled", 'data/assets/tilemaps/tileset_tiled.png');
             game.load.spritesheet("tileset tiled", "data/assets/tilemaps/tileset_tiled.png", 64, 64, 24);
-            game.load.spritesheet("houses", "data/assets/tilemaps/houses.png", 320, 320, 1);
+            game.load.spritesheet("houses", "data/assets/tilemaps/houses.png", 320, 320, 4);
+            // game.load.spritesheet("houses", "data/assets/tilemaps/bunny.png", 248, 340, 1);
 
             game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
             game.iso.anchor.setTo(0.5, 0.2);
         },
 
         create: function () {
-            debugOnCreate(true);
+            debugOnCreate(false);
 
             this.loadMap();
             this.loadCursors();
@@ -98,8 +117,13 @@ BasicGame.Boot.prototype =
         render: function () {
             debugRender(isDebug);
             // game.debug.cameraInfo(game.camera, 32, 32);
-        },
 
+            if (bunny) {
+                game.debug.spriteInputInfo(bunny, 32, 32);
+                game.debug.geom(bunny.input._tempPoint, 'rgba(255,255,0,1)');
+                game.debug.spriteBounds(bunny);
+            }
+        },
 
 
         updatePlayerGUIData: function () {
@@ -114,7 +138,7 @@ BasicGame.Boot.prototype =
             this.buildingsGroup = this.game.add.group();
 
             this.map = this.game.add.tilemap('falcon');
-            this.map.addTilesetImage("tileset tiled", "tileset tiled");
+            // this.map.addTilesetImage("tileset tiled", "tileset tiled");
             console.log('::', this.map);
 
             var backgroundLayer = this.map.layers[0].data;
@@ -126,12 +150,12 @@ BasicGame.Boot.prototype =
             var backgroundWidth = backgroundLayer.length;
             var backgroundHeight = backgroundLayer[0].length;
 
-
-            game.world.setBounds(440, 70, 2048, 2048);
+            game.world.setBounds(0, 150, 2048, 2048);
 
             // var tileProperties = this.map.tilesets[0].tileProperties;
             // console.log(':7:', this.map.tilesets[0].tileProperties);
 
+            /** Creating tiles */
             var i = 0, tile;
             for (var iy = 0; iy <= backgroundWidth - 1; iy++) {
                 for (var ix = 0; ix <= backgroundHeight - 1; ix++) {
@@ -145,6 +169,7 @@ BasicGame.Boot.prototype =
                     }
 
                     var tileTop = currentTile === 14 ? 0 : game.rnd.pick([2, 3, 4, 5]);
+                    // var tileTop = 0;
 
                     tile = game.add.isoSprite(
                         x,
@@ -187,7 +212,7 @@ BasicGame.Boot.prototype =
             }
 
 
-
+            /** Creating buildings */
             i = 0;
             for (iy = 0; iy <= backgroundWidth - 1; iy++) {
                 for (ix = 0; ix <= backgroundHeight - 1; ix++) {
@@ -219,13 +244,13 @@ BasicGame.Boot.prototype =
                     tile.anchor.set(0.5, 1);
                     tile.smoothed = false;
                     tile.initialZ = tileTop;
-
                     i++;
                 }
             }
 
 
-
+            game.camera.x = ((backgroundWidth * size) - (windowWidth / 3)) / 2 - 200;
+            game.camera.y = ((backgroundHeight * size) - (windowHeight / 3)) / 2 + 200;
 
 
             this.game.iso.simpleSort(this.groundGroup);
@@ -258,27 +283,41 @@ BasicGame.Boot.prototype =
         },
 
         mouseMoverment: function () {
-            if (game.input.activePointer.rightButton.isDown)
-            {
+            var self = this;
+
+            // game.input.mouse.mouseWheelCallback = mouseWheel;function mouseWheel(event) {   console.log(game.input.mouse.wheelDelta);}
+
+            if (game.input.activePointer.rightButton.isDown) {
+
+                // this.paintTile(); // TODO debug
+
                 if (buildMode) {
                     this.cancelBuildMode();
                 }
             }
 
-            if (game.input.activePointer.leftButton.isDown)
-            {
+            if (game.input.activePointer.leftButton.isDown) {
                 if (buildMode) {
                     this.paintBuilding();
                 } else {
 
-                    var sizeAndHalfSize = 2*size;
-                    // var sizeAndHalfSize = 5.5*size;
-                    var cursorCenterX = this.cursorPos.x + sizeAndHalfSize;
-                    var cursorCenterY = this.cursorPos.y + sizeAndHalfSize;
+                    // var sizeAndHalfSize = 2*size;
+                    var cursorCenterX = this.cursorPos.x;
+                    var cursorCenterY = this.cursorPos.y;
 
                     this.buildingsGroup.forEach(function (building) {
                         if (building.isoBounds.containsXY(cursorCenterX, cursorCenterY)) {
-                            console.log(':house:');
+                            console.log(':house:', building);
+                            // game.camera.focusOnXY(building.x, building.y);
+
+                            // var graphics = game.add.graphics(0, 0);
+                            // var graphics = game.add.graphics(building.isoBounds.x, building.isoBounds.y);
+
+                            // graphics.lineStyle(2, 0x0000FF, 1);
+                            // graphics.drawRect(building.isoBounds.x, building.isoBounds.y, building.isoBounds.widthX, building.isoBounds.widthY);
+
+                            console.log('::',building.isoBounds.x, building.isoBounds.y, building.isoBounds.widthX, building.isoBounds.widthY, self.cursorPos.x, self.cursorPos.y);
+
                         }
                     });
                 }
@@ -300,25 +339,69 @@ BasicGame.Boot.prototype =
             playerMoney -= buildingData.cost;
             this.updatePlayerGUIData();
 
-            var x = (selectedTile.x + 1 + 2 - 14) * size;
-            var y = (selectedTile.y + 1 - 2 - 3.5) * size;
+            var x = (selectedTile.x) * size;
+            var y = (selectedTile.y) * size;
 
 
-            game.add.isoSprite(
+            var tile = game.add.isoSprite(
                 x,
                 y,
                 7,
                 'houses',
-                0 - 1,
+                buildingData.type - 1,
                 this.buildingsGroup
             );
 
+            tile.anchor.set(0.5, 1);
+
             this.cancelBuildMode();
+            this.game.iso.simpleSort(this.buildingsGroup);
+        },
+
+        paintTile: function () {
+
+            var x = (selectedTile.x) * size;
+            var y = (selectedTile.y) * size;
+
+
+            // var tile = game.add.isoSprite(
+            //     x,
+            //     y,
+            //     7,
+            //     'houses',
+            //     buildingData.type - 1,
+            //     this.buildingsGroup
+            // );
+
+            var tile = game.add.sprite(x, y, 'houses', 0 - 1);
+            tile.anchor.set(0.5, 1);
+
+            tile.inputEnabled = true; //DBG
+            tile.input.pixelPerfect = true;
+            tile.input.useHandCursor = true;
+
+            bunny = tile;
+
+            console.log('::', tile);
+
+            // this.cancelBuildMode();
+            // this.game.iso.simpleSort(this.buildingsGroup);
+
+            // var tile = game.add.isoSprite(
+            //     x,
+            //     y,
+            //     0,
+            //     'tileset tiled',
+            //     1 - 1,
+            //     this.groundGroup
+            // );
+            // tile.autoCull = true;
+            // tile.anchor.set(0.5, 1);
         },
 
         cancelBuildMode: function () {
             buildMode = false;
-            this.deselectTiles();
+            this.deselectAllTiles();
         },
 
         keyboardMoverment: function () {
@@ -383,19 +466,19 @@ BasicGame.Boot.prototype =
 
             return canPlaceable;
         },
-        
-        deselectTiles: function () {
+
+        deselectAllTiles: function () {
             var self = this;
             this.groundGroup.forEach(function (tile) {
                 if (tile.selected) {
                     tile.selected = false;
-                        tile.tint = 0xffffff;
+                    tile.tint = 0xffffff;
                     self.game.add.tween(tile).to({isoZ: tile.initialZ + 0}, 200, Phaser.Easing.Quadratic.InOut, true);
                 }
 
             });
         },
-        
+
         selectedArea: function (width, height, tile) {
 
             var sizeAndHalfSize = size + size / 2;
@@ -415,8 +498,8 @@ BasicGame.Boot.prototype =
                     if (tile.isoBounds.containsXY(cursorCenterX + xOffset, cursorCenterY + yOffset)) {
                         inBounds = true;
 
-                        if (ix === 0 && iy === 0) {
-                            selectedTile = {'x': tile.tileX, 'y': tile.tileY}
+                        if (ix === width - 1 && iy === height - 1) {
+                            selectedTile = {'x': tile.tileX + 1, 'y': tile.tileY + 1}
                         }
                     }
                 }
