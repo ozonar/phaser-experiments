@@ -85,6 +85,7 @@ BasicGame.Boot.prototype =
             game.stage.disableVisibilityChange = true;
 
             game.plugins.add(new Phaser.Plugin.Isometric(game));
+            game.kineticScrolling = this.game.plugins.add(Phaser.Plugin.KineticScrolling);
 
             slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
             game.load.image('menu-button', 'data/assets/ui/menu.png');
@@ -107,8 +108,22 @@ BasicGame.Boot.prototype =
             loadMap();
             this.loadCursors();
             loadMenu();
+            this.scrollPlugin();
             // buildMenu();
 
+        },
+
+        scrollPlugin: function () {
+            this.game.kineticScrolling.configure({
+                kineticMovement: true,
+                timeConstantScroll: 125, //really mimic iOS
+                horizontalScroll: true,
+                verticalScroll: true,
+                horizontalWheel: false,
+                verticalWheel: false,
+                deltaWheel: 40
+            });
+            this.game.kineticScrolling.start();
         },
         update: function () {
 
@@ -187,7 +202,7 @@ BasicGame.Boot.prototype =
 
                     buildingsGroup.forEach(function (building) {
                         if (building.isoBounds.containsXY(cursorCenterX, cursorCenterY)) {
-                            console.log(':house:', building);
+                            // console.log(':house:', building);
                             // game.camera.focusOnXY(building.x, building.y);
                         }
                     });
