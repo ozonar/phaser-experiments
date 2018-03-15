@@ -37,8 +37,9 @@ var playerGUI = {
     'money': null
 };
 
-var BOT_ONE = 1;
-var BOT_TWO = 2;
+var PLAYER_ME = 0; // player_id
+var PLAYER_BOT_ONE = 1;
+// var PLAYER_BOT_TWO = 2;
 
 var bunny;
 
@@ -164,13 +165,11 @@ BasicGame.Boot.prototype =
         },
 
         mouseMoverment: function () {
-            // var self = this;
-
             // game.input.mouse.mouseWheelCallback = mouseWheel;function mouseWheel(event) {   console.log(game.input.mouse.wheelDelta);}
 
             if (game.input.activePointer.rightButton.isDown) {
 
-                this.paintTile(); // TODO debug
+                // this.paintTile(); // TODO debug
 
                 if (buildMode) {
                     this.cancelBuildMode();
@@ -213,7 +212,7 @@ BasicGame.Boot.prototype =
             var x = (selectedTile.x) * size;
             var y = (selectedTile.y) * size;
 
-            this.createBuilding(x, y, 7, buildingData.type);
+            createBuilding(x, y, 7, buildingData.type, {'owner': PLAYER_ME});
 
             this.cancelBuildMode();
             this.game.iso.simpleSort(buildingsGroup);
@@ -223,8 +222,8 @@ BasicGame.Boot.prototype =
 
             // var x = (selectedTile.x) * size;
             // var y = (selectedTile.y) * size;
-            var x = (this.cursorPos.x) ;
-            var y = (this.cursorPos.y) ;
+            var x = (this.cursorPos.x);
+            var y = (this.cursorPos.y);
 
             // var tile = game.add.isoSprite(
             //     x,
@@ -235,7 +234,7 @@ BasicGame.Boot.prototype =
             //     this.buildingsGroup
             // );
 
-            bunny = game.add.sprite(x, y, 'houses', - 1);
+            bunny = game.add.sprite(x, y, 'houses', -1);
             bunny.anchor.set(0.5, 1);
 
             bunny.inputEnabled = true;
@@ -295,14 +294,14 @@ BasicGame.Boot.prototype =
                 var inBounds = self.selectedArea(height, width, tile);
 
                 var waterIncludes = false;
-                this.water.forEach(function (value) {
-                    if (value.z === tile.z) {
-                        waterIncludes = true;
-                        if (inBounds) {
-                            canPlaceable = false;
-                        }
+
+                if (tile.noBuilding === 1) {
+                    waterIncludes = true;
+
+                    if (inBounds) {
+                        canPlaceable = false;
                     }
-                });
+                }
 
                 if (!tile.selected && inBounds && !waterIncludes) {
                     // If it does, do a little animation and tint change.

@@ -118,7 +118,7 @@ function loadMenu () {
     playerGUI.money.add(playerGUI.moneyText = new SlickUI.Element.Text(0,0, playerMoney + moneyCurrency)).center();
 
     // Fullscreen button
-    slickUI.add(menuButton = new SlickUI.Element.DisplayObject(game.width - 91, 8, game.make.sprite(0, 0, 'fullscreen-button')));
+    slickUI.add(menuButton = new SlickUI.Element.DisplayObject(28, 8, game.make.sprite(0, 0, 'fullscreen-button')));
     menuButton.inputEnabled = true;
     menuButton.input.useHandCursor = true;
     menuButton.events.onInputDown.add(function () {

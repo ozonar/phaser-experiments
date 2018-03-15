@@ -21,6 +21,8 @@ function loadMap() {
     // var tileProperties = this.map.tilesets[0].tileProperties;
     console.log(':7:', this.map.tilesets[0].tileProperties);
 
+    var tileProperties = this.map.tilesets[0].tileProperties;
+
     /** Creating tiles */
     var i = 0, tile;
     for (var iy = 0; iy <= backgroundWidth - 1; iy++) {
@@ -35,9 +37,18 @@ function loadMap() {
             }
 
             var tileTop = currentTile === 14 ? 0 : game.rnd.pick([2, 3, 4, 5]);
-            // var tileTop = 0;
 
-            tile = createSprite(ix, iy, tileTop, currentTile);
+            var params = [];
+            var tileParams = [];
+            if (tileParams = this.map.tilesets[0].tileProperties[currentTile-1]) {
+                params.tileParams = tileParams
+            } else {
+                params.tileParams = [];
+            }
+
+
+
+            tile = createSprite(ix, iy, tileTop, currentTile, params);
 
             i++;
         }
@@ -59,7 +70,8 @@ function loadMap() {
             var x = (ix + 1 + 2) * size;
             var y = (iy + 1 - 2) * size;
 
-            tile = createBuilding(x, y, 7, currentTile);
+            var params = {'owner': PLAYER_BOT_ONE};
+            tile = createBuilding(x, y, 7, currentTile, params);
             tile.tileX = ix;
             tile.tileY = iy;
 
@@ -73,7 +85,7 @@ function loadMap() {
     this.game.iso.simpleSort(groundGroup);
 }
 
-function createSprite(ix, iy, z, type) {
+function createSprite(ix, iy, z, type, params) {
 
     var x = (ix + 1) * size;
     var y = (iy + 1) * size;
@@ -96,6 +108,15 @@ function createSprite(ix, iy, z, type) {
     tile.initialZ = z;
     // tile.body.moves = false;
 
+    if (params.tileParams) {
+        for (var currParam in params.tileParams) {
+            // console.log(':1:', currParam, params.tileParams[currParam]);
+
+            if (currParam === 'noBuilding') {
+                tile.noBuilding = 1;
+            }
+        }
+    }
     // Up tile for wood
     if (type === 20 + 1) {
         tile.isoZ += 4;
@@ -118,7 +139,7 @@ function createSprite(ix, iy, z, type) {
     return type;
 }
 
- function createBuilding(x, y, z, type) {
+ function createBuilding(x, y, z, type, params) {
     var tile = game.add.isoSprite(
         x,
         y,
@@ -129,12 +150,17 @@ function createSprite(ix, iy, z, type) {
     );
     tile.anchor.set(0.5, 1);
 
+    tile.smoothed = false;
+    tile.initialZ = z;
+
     tile.inputEnabled = true;
     tile.input.pixelPerfectOver = true;
     tile.input.useHandCursor = true;
 
-    tile.smoothed = false;
-    tile.initialZ = z;
+
+    if (params['owner'] ) {
+        tile.owner = PLAYER_BOT_ONE;
+    }
 
     tile.events.onInputDown.add(function(r) {
         if (r.input.pointerOver()) {

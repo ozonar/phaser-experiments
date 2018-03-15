@@ -52,14 +52,40 @@
             {
              "14":
                 {
+                 "noBuilding":true,
                  "type":"water"
+                },
+             "20":
+                {
+                 "noBuilding":true
+                },
+             "22":
+                {
+                 "noBuilding":true
+                },
+             "23":
+                {
+                 "noBuilding":true
                 }
             },
          "tilepropertytypes":
             {
              "14":
                 {
+                 "noBuilding":"bool",
                  "type":"string"
+                },
+             "20":
+                {
+                 "noBuilding":"bool"
+                },
+             "22":
+                {
+                 "noBuilding":"bool"
+                },
+             "23":
+                {
+                 "noBuilding":"bool"
                 }
             },
          "tilewidth":64
@@ -69,15 +95,15 @@
          "source":"1616.tsx"
         }, 
         {
-         "columns":1,
+         "columns":2,
          "firstgid":25,
          "image":"houses.png",
-         "imageheight":404,
-         "imagewidth":528,
+         "imageheight":640,
+         "imagewidth":640,
          "margin":0,
          "name":"houses",
          "spacing":0,
-         "tilecount":1,
+         "tilecount":4,
          "tileheight":320,
          "tilewidth":320
         }],

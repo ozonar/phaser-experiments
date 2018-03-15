@@ -7,13 +7,29 @@
   <image source="tileset_tiled.png" width="439" height="256"/>
   <tile id="14">
    <properties>
+    <property name="noBuilding" type="bool" value="true"/>
     <property name="type" value="water"/>
+   </properties>
+  </tile>
+  <tile id="20">
+   <properties>
+    <property name="noBuilding" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="22">
+   <properties>
+    <property name="noBuilding" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="23">
+   <properties>
+    <property name="noBuilding" type="bool" value="true"/>
    </properties>
   </tile>
  </tileset>
  <tileset firstgid="25" source="1616.tsx"/>
- <tileset firstgid="25" name="houses" tilewidth="320" tileheight="320" tilecount="1" columns="1">
-  <image source="houses.png" width="528" height="404"/>
+ <tileset firstgid="25" name="houses" tilewidth="320" tileheight="320" tilecount="4" columns="2">
+  <image source="houses.png" width="640" height="640"/>
  </tileset>
  <layer name="background" width="40" height="40">
   <data encoding="csv">
