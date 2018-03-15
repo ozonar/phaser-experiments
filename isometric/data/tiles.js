@@ -1,5 +1,9 @@
+var h = window.screen.height;
+var w = window.screen.width;
+var div = h/w;
+
 var windowWidth = 1280;
-var windowHeight = 640;
+var windowHeight = windowWidth*div; // var windowHeight = 720;
 
 var game = new Phaser.Game(windowWidth, windowHeight, Phaser.webGL, 'test', null, true, false);
 
@@ -108,7 +112,7 @@ BasicGame.Boot.prototype =
             loadMap();
             this.loadCursors();
             loadMenu();
-            this.scrollPlugin();
+            // this.scrollPlugin();
             // buildMenu();
 
         },
@@ -308,17 +312,17 @@ BasicGame.Boot.prototype =
 
                 var inBounds = self.selectedArea(height, width, tile);
 
-                var waterIncludes = false;
+                var busyTile = false;
 
                 if (tile.noBuilding === 1) {
-                    waterIncludes = true;
+                    busyTile = true;
 
                     if (inBounds) {
                         canPlaceable = false;
                     }
                 }
 
-                if (!tile.selected && inBounds && !waterIncludes) {
+                if (!tile.selected && inBounds && !busyTile) {
                     // If it does, do a little animation and tint change.
 
                     tile.selected = true;
