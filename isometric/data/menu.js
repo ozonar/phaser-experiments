@@ -117,6 +117,19 @@ function loadMenu () {
     slickUI.add(playerGUI.money = new SlickUI.Element.Panel(185, 8, 140, 40));
     playerGUI.money.add(playerGUI.moneyText = new SlickUI.Element.Text(0,0, playerMoney + moneyCurrency)).center();
 
+    // Fullscreen button
+    slickUI.add(menuButton = new SlickUI.Element.DisplayObject(game.width - 91, 8, game.make.sprite(0, 0, 'fullscreen-button')));
+    menuButton.inputEnabled = true;
+    menuButton.input.useHandCursor = true;
+    menuButton.events.onInputDown.add(function () {
+        if (game.scale.isFullScreen) {
+            game.scale.stopFullScreen();
+        } else {
+            game.scale.startFullScreen(false);
+        }
+    }, this);
+
+
     // Menu button
     slickUI.add(menuButton = new SlickUI.Element.DisplayObject(game.width - 45, 8, game.make.sprite(0, 0, 'menu-button')));
     menuButton.inputEnabled = true;

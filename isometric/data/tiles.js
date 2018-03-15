@@ -11,6 +11,10 @@ BasicGame.Boot = function (game) {
 };
 
 var isoGroup, water = [];
+
+var groundGroup = [];
+var buildingsGroup = [];
+
 // var buildingGroup = [];
 var isDebug = false;
 var cursors;
@@ -33,6 +37,8 @@ var playerGUI = {
     'money': null
 };
 
+var BOT_ONE = 1;
+var BOT_TWO = 2;
 
 var bunny;
 
@@ -81,13 +87,12 @@ BasicGame.Boot.prototype =
 
             slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
             game.load.image('menu-button', 'data/assets/ui/menu.png');
+            game.load.image('fullscreen-button', 'data/assets/ui/fullscreen.png');
             slickUI.load('data/assets/ui/kenney/kenney.json');
 
-            // game.load.atlasJSONHash('tileset', 'data/assets/tileset.png', 'data/assets/tileset.json');
             this.load.tilemap('falcon', 'data/assets/tilemaps/falcon.json', null, Phaser.Tilemap.TILED_JSON);
             game.load.spritesheet("tileset tiled", "data/assets/tilemaps/tileset_tiled.png", 64, 64, 24);
             game.load.spritesheet("houses", "data/assets/tilemaps/houses.png", 320, 320, 4);
-            // game.load.spritesheet("houses", "data/assets/tilemaps/bunny.png", 248, 340, 1);
 
             game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
             game.iso.anchor.setTo(0.5, 0.2);
@@ -96,7 +101,9 @@ BasicGame.Boot.prototype =
         create: function () {
             debugOnCreate(false);
 
-            this.loadMap();
+            game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL; // EXACT_FIT; NO_SCALE;
+
+            loadMap();
             this.loadCursors();
             loadMenu();
             // buildMenu();
@@ -131,130 +138,6 @@ BasicGame.Boot.prototype =
             playerGUI.moneyText.value = playerMoney + moneyCurrency;
             // playerGUI.money.add(new SlickUI.Element.Text(0,0, playerMoney + moneyCurrency)).center();
         },
-
-        loadMap: function () {
-
-            this.groundGroup = this.game.add.group();
-            this.buildingsGroup = this.game.add.group();
-
-            this.map = this.game.add.tilemap('falcon');
-            // this.map.addTilesetImage("tileset tiled", "tileset tiled");
-            console.log('::', this.map);
-
-            var backgroundLayer = this.map.layers[0].data;
-            var buildingsLayer = this.map.layers[1].data;
-
-            var backgroundTiles = getTilesFromTilemap(backgroundLayer);
-            // var buildingsTiles = getTilesFromTilemap(buildingsLayer);
-
-            var backgroundWidth = backgroundLayer.length;
-            var backgroundHeight = backgroundLayer[0].length;
-
-            game.world.setBounds(0, 150, 2048, 2048);
-
-            // var tileProperties = this.map.tilesets[0].tileProperties;
-            // console.log(':7:', this.map.tilesets[0].tileProperties);
-
-            /** Creating tiles */
-            var i = 0, tile;
-            for (var iy = 0; iy <= backgroundWidth - 1; iy++) {
-                for (var ix = 0; ix <= backgroundHeight - 1; ix++) {
-
-                    var x = (ix + 1) * size;
-                    var y = (iy + 1) * size;
-                    var currentTile = backgroundTiles[iy][ix];
-
-                    if (typeof(currentTile) === 'undefined') {
-                        continue;
-                    }
-
-                    var tileTop = currentTile === 14 ? 0 : game.rnd.pick([2, 3, 4, 5]);
-                    // var tileTop = 0;
-
-                    tile = game.add.isoSprite(
-                        x,
-                        y,
-                        tileTop,
-                        'tileset tiled',
-                        currentTile - 1,
-                        this.groundGroup
-                    );
-
-                    tile.tileX = ix;
-                    tile.tileY = iy;
-
-                    tile.anchor.set(0.5, 1);
-                    tile.smoothed = false;
-                    tile.initialZ = tileTop;
-                    // tile.body.moves = false;
-
-                    // Up tile for wood
-                    if (currentTile === 20 + 1) {
-                        tile.isoZ += 4;
-                        tile.initialZ += 4;
-
-                        // Put tile under bridge
-                        var waterUnderBridge = this.game.add.isoSprite(x, y, 0, 'tileset tiled', 14, this.groundGroup);
-                        waterUnderBridge.anchor.set(0.5, 1);
-                        waterUnderBridge.initialZ = -4;
-                        water.push(waterUnderBridge);
-                    }
-                    // For other
-                    if (currentTile < 14 + 1) {
-                        tile.scale.x = game.rnd.pick([-1, 1]);
-                    }
-                    // For water
-                    if (currentTile === 14 + 1) {
-                        water.push(tile);
-                    }
-                    i++;
-                }
-            }
-
-
-            /** Creating buildings */
-            i = 0;
-            for (iy = 0; iy <= backgroundWidth - 1; iy++) {
-                for (ix = 0; ix <= backgroundHeight - 1; ix++) {
-
-
-                    currentTile = buildingsLayer[iy][ix];
-
-                    if (typeof(currentTile) === 'undefined' || currentTile.index === -1) {
-                        continue;
-                    }
-
-                    x = (ix + 1 + 2) * size;
-                    y = (iy + 1 - 2) * size;
-
-                    tileTop = 7;
-
-                    tile = game.add.isoSprite(
-                        x,
-                        y,
-                        tileTop,
-                        'houses',
-                        currentTile - 1,
-                        this.buildingsGroup
-                    );
-
-                    tile.tileX = ix;
-                    tile.tileY = iy;
-
-                    tile.anchor.set(0.5, 1);
-                    tile.smoothed = false;
-                    tile.initialZ = tileTop;
-                    i++;
-                }
-            }
-
-
-            game.camera.x = ((backgroundWidth * size) - (windowWidth / 3)) / 2 - 200;
-            game.camera.y = ((backgroundHeight * size) - (windowHeight / 3)) / 2 + 200;
-
-
-            this.game.iso.simpleSort(this.groundGroup);
-        },
         loadCursors: function () {
             this.cursorPos = new Phaser.Plugin.Isometric.Point3();
             cursors = {
@@ -276,14 +159,12 @@ BasicGame.Boot.prototype =
             });
         },
         updateMoverment: function () {
-
             this.mouseMoverment();
             this.keyboardMoverment();
-
         },
 
         mouseMoverment: function () {
-            var self = this;
+            // var self = this;
 
             // game.input.mouse.mouseWheelCallback = mouseWheel;function mouseWheel(event) {   console.log(game.input.mouse.wheelDelta);}
 
@@ -305,19 +186,10 @@ BasicGame.Boot.prototype =
                     var cursorCenterX = this.cursorPos.x;
                     var cursorCenterY = this.cursorPos.y;
 
-                    this.buildingsGroup.forEach(function (building) {
+                    buildingsGroup.forEach(function (building) {
                         if (building.isoBounds.containsXY(cursorCenterX, cursorCenterY)) {
                             console.log(':house:', building);
                             // game.camera.focusOnXY(building.x, building.y);
-
-                            // var graphics = game.add.graphics(0, 0);
-                            // var graphics = game.add.graphics(building.isoBounds.x, building.isoBounds.y);
-
-                            // graphics.lineStyle(2, 0x0000FF, 1);
-                            // graphics.drawRect(building.isoBounds.x, building.isoBounds.y, building.isoBounds.widthX, building.isoBounds.widthY);
-
-                            console.log('::',building.isoBounds.x, building.isoBounds.y, building.isoBounds.widthX, building.isoBounds.widthY, self.cursorPos.x, self.cursorPos.y);
-
                         }
                     });
                 }
@@ -325,7 +197,6 @@ BasicGame.Boot.prototype =
 
 
         },
-
         paintBuilding: function () {
 
             if (playerMoney < buildingData.cost) {
@@ -342,24 +213,10 @@ BasicGame.Boot.prototype =
             var x = (selectedTile.x) * size;
             var y = (selectedTile.y) * size;
 
-
-            bunny = game.add.isoSprite(
-                x,
-                y,
-                7,
-                'houses',
-                buildingData.type - 1,
-                this.buildingsGroup
-            );
-
-            bunny.anchor.set(0.5, 1);
-
-            bunny.inputEnabled = true;
-            bunny.input.pixelPerfectOver = true;
-            bunny.input.useHandCursor = true;
+            this.createBuilding(x, y, 7, buildingData.type);
 
             this.cancelBuildMode();
-            this.game.iso.simpleSort(this.buildingsGroup);
+            this.game.iso.simpleSort(buildingsGroup);
         },
 
         paintTile: function () {
@@ -433,7 +290,7 @@ BasicGame.Boot.prototype =
             var self = this;
             canPlaceable = true;
             // Loop through all tiles
-            this.groundGroup.forEach(function (tile) {
+            groundGroup.forEach(function (tile) {
 
                 var inBounds = self.selectedArea(height, width, tile);
 
@@ -473,7 +330,7 @@ BasicGame.Boot.prototype =
 
         deselectAllTiles: function () {
             var self = this;
-            this.groundGroup.forEach(function (tile) {
+            groundGroup.forEach(function (tile) {
                 if (tile.selected) {
                     tile.selected = false;
                     tile.tint = 0xffffff;
