@@ -1,0 +1,28 @@
+<html>
+<head>
+    <title>Phaser experiments</title>
+
+    <script type="text/javascript" src="data/vendor/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="data/vendor/phaser.js"></script>
+    <script type="text/javascript" src="data/vendor/phaser-tiled.js"></script>
+    <!--<script type="text/javascript" src="data/vendor/phaser-plugin-isometric.min.js"></script>-->
+    <!--<script type="text/javascript" src="data/vendor/phaser-compat-2.4.js"></script>-->
+
+    <script type="text/javascript" src="data/tiles-clear.js"></script>
+
+    <script>
+        document.oncontextmenu = function () {
+            return false;
+        };
+
+        document.addEventListener('mousedown', function (e) {
+            if (e.button === 1) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</head>
+<body style="margin: 0;  overflow:  hidden;">
+
+</body>
+</html>

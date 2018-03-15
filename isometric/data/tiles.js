@@ -64,7 +64,7 @@ var buildings = {
         'name': 'tavern',
         'cost': 12000,
         'type': 4
-    },
+    }
 };
 
 var menus = {};
@@ -74,7 +74,7 @@ BasicGame.Boot.prototype =
         preload: function () {
 
             game.time.advancedTiming = true;
-            game.debug.renderShadow = false;
+            // game.debug.renderShadow = false;
             game.stage.disableVisibilityChange = true;
 
             game.plugins.add(new Phaser.Plugin.Isometric(game));
@@ -289,7 +289,7 @@ BasicGame.Boot.prototype =
 
             if (game.input.activePointer.rightButton.isDown) {
 
-                // this.paintTile(); // TODO debug
+                this.paintTile(); // TODO debug
 
                 if (buildMode) {
                     this.cancelBuildMode();
@@ -343,7 +343,7 @@ BasicGame.Boot.prototype =
             var y = (selectedTile.y) * size;
 
 
-            var tile = game.add.isoSprite(
+            bunny = game.add.isoSprite(
                 x,
                 y,
                 7,
@@ -352,7 +352,11 @@ BasicGame.Boot.prototype =
                 this.buildingsGroup
             );
 
-            tile.anchor.set(0.5, 1);
+            bunny.anchor.set(0.5, 1);
+
+            bunny.inputEnabled = true;
+            bunny.input.pixelPerfectOver = true;
+            bunny.input.useHandCursor = true;
 
             this.cancelBuildMode();
             this.game.iso.simpleSort(this.buildingsGroup);
@@ -360,9 +364,10 @@ BasicGame.Boot.prototype =
 
         paintTile: function () {
 
-            var x = (selectedTile.x) * size;
-            var y = (selectedTile.y) * size;
-
+            // var x = (selectedTile.x) * size;
+            // var y = (selectedTile.y) * size;
+            var x = (this.cursorPos.x) ;
+            var y = (this.cursorPos.y) ;
 
             // var tile = game.add.isoSprite(
             //     x,
@@ -373,18 +378,17 @@ BasicGame.Boot.prototype =
             //     this.buildingsGroup
             // );
 
-            var tile = game.add.sprite(x, y, 'houses', 0 - 1);
-            tile.anchor.set(0.5, 1);
+            bunny = game.add.sprite(x, y, 'houses', - 1);
+            bunny.anchor.set(0.5, 1);
 
-            tile.inputEnabled = true; //DBG
-            tile.input.pixelPerfect = true;
-            tile.input.useHandCursor = true;
+            bunny.inputEnabled = true;
+            bunny.input.pixelPerfectOver = true;
+            bunny.input.useHandCursor = true;
 
-            bunny = tile;
+            // bunny = tile;
 
-            console.log('::', tile);
+            console.log('::', bunny);
 
-            // this.cancelBuildMode();
             // this.game.iso.simpleSort(this.buildingsGroup);
 
             // var tile = game.add.isoSprite(
